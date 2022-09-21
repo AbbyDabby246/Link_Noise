@@ -12,7 +12,7 @@ states = {
           '101' : [],
           '111' : []
             }
-param = 3
+param = '5'
 file = 'stateMRTs_param' + str(param) + '.txt'
 f = open('C:/project/Summer_2022_DrMKJolly/Link_Noise/individualSimuls/ToggleTriad/MRTs/' + file, 'r')
 
