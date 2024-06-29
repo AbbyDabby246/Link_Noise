@@ -10,12 +10,11 @@ states = {
           '110' : [],
           '011' : [],
           '101' : [],
-          '111' : [],
-          '000' : []
+          '111' : []
             }
-param = '0'
+param = '5'
 file = 'stateMRTs_param' + str(param) + '.txt'
-f = open('C:/project/Summer_2022_DrMKJolly/TT/' + file, 'r')
+f = open('C:/project/Summer_2022_DrMKJolly/Link_Noise/individualSimuls/ToggleTriad/MRTs/' + file, 'r')
 
 for row in f:
   row = re.split(r'\s{1,}', row)
@@ -32,9 +31,8 @@ f.set_figheight(5)
 for key in states.keys():
     y = states[key]
     x = noises
-    plt.plot(x,y, label = key, marker='o')
+    plt.plot(x,y, label = key)
 plt.title('MRTs for TT; Param: ' + str(param))
 plt.yscale('symlog')
 plt.legend()
-plt.savefig("MRTs_TT_param_" + str(param) +'.png')
-plt.close()
+plt.show()

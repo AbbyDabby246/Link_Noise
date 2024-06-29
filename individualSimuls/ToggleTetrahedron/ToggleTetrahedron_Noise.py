@@ -21,35 +21,36 @@ def HS(b, b0a, nba, lba):
 def step(x, tau):
     return 1 * (x > tau)
 
-def count_switches(lst):
-    switch_count = 0
-    for i in range(1, len(lst)):
-        if lst[i] != lst[i - 1]:
-            switch_count += 1
-    return switch_count
-
 def integration_const(p, time, time2, index, p_index, noise):
     dt = time[1] - time[0]
     points = time.size - 1
     
-    st_100 = 0
-    st_010 = 0
-    st_001 = 0
-    st_110 = 0
-    st_011 = 0
-    st_101 = 0
-    st_111 = 0    
-    st_000 = 0
-
-    curr_state = []
+    st_1000 = 0
+    st_0100 = 0
+    st_0010 = 0
+    st_1010 = 0
+    st_1100 = 0
+    st_0110 = 0
+    st_0000 = 0
+    st_1110 = 0
+    st_1001 = 0
+    st_0101 = 0
+    st_0011 = 0
+    st_1011 = 0
+    st_1101 = 0
+    st_0111 = 0
+    st_0001 = 0
+    st_1111 = 0
 
     A = np.empty(points + 1)
     B = np.empty(points + 1)
     C = np.empty(points + 1)
+    D = np.empty(points + 1)
     
     A[0] = p['Aic'][index]
     B[0] = p['Bic'][index]
     C[0] = p['Cic'][index]
+    D[0] = p['Dic'][index]
 
     lAtoB = p['lAtoB'][p_index]
     lBtoC = p['lBtoC'][p_index]
@@ -57,14 +58,22 @@ def integration_const(p, time, time2, index, p_index, noise):
     lAtoC = p['lAtoC'][p_index]
     lCtoB = p['lCtoB'][p_index]
     lBtoA = p['lBtoA'][p_index]
+    lAtoD = p['lAtoD'][p_index]
+    lBtoD = p['lBtoD'][p_index]
+    lCtoD = p['lCtoD'][p_index]
+    lDtoC = p['lDtoC'][p_index]
+    lDtoB = p['lDtoB'][p_index]
+    lDtoA = p['lDtoA'][p_index]
     
     ga = p['gA'][p_index]
     gb = p['gB'][p_index]
     gc = p['gC'][p_index]
+    gd = p['gD'][p_index]
     
     ka = p['kA'][p_index]
     kb = p['kB'][p_index]
     kc = p['kC'][p_index]
+    kd = p['kD'][p_index]
     
     trdCtoA = p['trdCtoA'][p_index]
     trdBtoA = p['trdBtoA'][p_index]
@@ -72,6 +81,12 @@ def integration_const(p, time, time2, index, p_index, noise):
     trdCtoB = p['trdCtoB'][p_index]
     trdAtoC = p['trdAtoC'][p_index]
     trdBtoC = p['trdBtoC'][p_index]
+    trdCtoD = p['trdCtoD'][p_index]
+    trdBtoD = p['trdBtoD'][p_index]
+    trdAtoD = p['trdAtoD'][p_index]
+    trdDtoB = p['trdDtoB'][p_index]
+    trdDtoC = p['trdDtoC'][p_index]
+    trdDtoA = p['trdDtoA'][p_index]
     
     nCtoA = p['nCtoA'][p_index]
     nBtoA = p['nBtoA'][p_index]
@@ -79,10 +94,19 @@ def integration_const(p, time, time2, index, p_index, noise):
     nCtoB = p['nCtoB'][p_index]
     nAtoC = p['nAtoC'][p_index]
     nBtoC = p['nBtoC'][p_index]
+    nCtoD = p['nCtoD'][p_index]
+    nBtoD = p['nBtoD'][p_index]
+    nAtoD = p['nAtoD'][p_index]
+    nDtoB = p['nDtoB'][p_index]
+    nDtoC = p['nDtoC'][p_index]
+    nDtoA = p['nDtoA'][p_index]
 
-    threshA = (ga / ka) / 2
-    threshB = (gb / kb) / 2
-    threshC = (gc / kc) / 2
+    thresh_A = (ga / ka) / 2
+    thresh_B = (gb / kb) / 2
+    thresh_C = (gc / kc) / 2
+    thresh_D = (gd / kd) / 2
+
+    states = []
 
     for i in range(1, points + 1):
         if time[i] % 100 == 0:
@@ -95,59 +119,24 @@ def integration_const(p, time, time2, index, p_index, noise):
             lAtoC = max(0,min(0.2,(lAtoC + random.gauss(0,noise))))
             lCtoB = max(0,min(0.2,(lCtoB + random.gauss(0,noise))))
             lBtoA = max(0,min(0.2,(lBtoA + random.gauss(0,noise))))
+            lAtoD = max(0,min(0.2,(lAtoD + random.gauss(0,noise))))
+            lBtoD = max(0,min(0.2,(lBtoD + random.gauss(0,noise))))
+            lCtoD = max(0,min(0.2,(lCtoD + random.gauss(0,noise))))
+            lDtoC = max(0,min(0.2,(lDtoC + random.gauss(0,noise))))
+            lDtoB = max(0,min(0.2,(lDtoB + random.gauss(0,noise))))
+            lDtoA = max(0,min(0.2,(lDtoA + random.gauss(0,noise))))
         
 
         
-        A[i] = A[i-1] + dt * (ga * HS(C[i - 1], trdCtoA, nCtoA, lCtoA) * HS(B[i - 1], trdBtoA, nBtoA, lBtoA) - ka * A[i-1])
-        B[i] = B[i-1] + dt * (gb * HS(A[i - 1], trdAtoB, nAtoB, lAtoB) * HS(C[i - 1], trdCtoB, nCtoB, lCtoB) - kb * B[i-1])
-        C[i] = C[i-1] + dt * (gc * HS(B[i - 1], trdBtoC, nBtoC, lBtoC) * HS(A[i - 1], trdAtoC, nAtoC, lAtoC) - kc * C[i-1])
+        A[i] = A[i-1] + dt * (ga * HS(C[i - 1], trdCtoA, nCtoA, lCtoA) * HS(B[i - 1], trdBtoA, nBtoA, lBtoA) * HS(D[i - 1], trdDtoA, nDtoA, lDtoA) - ka * A[i-1])
+        B[i] = B[i-1] + dt * (gb * HS(A[i - 1], trdAtoB, nAtoB, lAtoB) * HS(C[i - 1], trdCtoB, nCtoB, lCtoB) * HS(D[i - 1], trdDtoB, nDtoB, lDtoB) - kb * B[i-1])
+        C[i] = C[i-1] + dt * (gc * HS(B[i - 1], trdBtoC, nBtoC, lBtoC) * HS(A[i - 1], trdAtoC, nAtoC, lAtoC) * HS(D[i - 1], trdDtoC, nDtoC, lDtoC) - kc * C[i-1])
+        D[i] = D[i-1] + dt * (gd * HS(A[i - 1], trdAtoD, nAtoD, lAtoD) * HS(B[i - 1], trdBtoD, nBtoD, lBtoD) * HS(C[i - 1], trdCtoD, nCtoD, lCtoD) - kd * D[i-1])
         
+        states.append([int(A[i] >= thresh_A), int(B[i] >= thresh_B), int(C[i] >= thresh_C), int(D[i] >= thresh_D)])
         
-        '''if (time[i] > 55.0):
-            if A[i] > 10 and B[i] < 10 and C[i] < 10:
-                st_100 += 0.01
-            elif A[i] < 10 and B[i] > 10 and C[i] < 10:
-                st_010 += 0.01
-            elif A[i] < 10 and B[i] < 10 and C[i] > 10:
-                st_001 += 0.01
-            elif A[i] > 10 and B[i] > 10 and C[i] < 10:
-                st_110 += 0.01
-            elif A[i] < 10 and B[i] > 10 and C[i] > 10:
-                st_011 += 0.01
-            elif A[i] > 10 and B[i] < 10 and C[i] > 10:
-                st_101 += 0.01
-            elif A[i] > 10 and B[i] > 10 and C[i] > 10:
-                st_111 += 0.01'''
 
-        if (time[i] > 55.0):
-            if A[i] > threshA and B[i] < threshB and C[i] < threshC:
-                st_100 += 0.01
-                curr_state.append('st_100')
-            elif A[i] < threshA and B[i] > threshB and C[i] < threshC:
-                st_010 += 0.01
-                curr_state.append('st_010')
-            elif A[i] < threshA and B[i] < threshB and C[i] > threshC:
-                st_001 += 0.01
-                curr_state.append('st_001')
-            elif A[i] > threshA and B[i] > threshB and C[i] < threshC:
-                st_110 += 0.01
-                curr_state.append('st_110')
-            elif A[i] < threshA and B[i] > threshB and C[i] > threshC:
-                st_011 += 0.01
-                curr_state.append('st_011')
-            elif A[i] > threshA and B[i] < threshB and C[i] > threshC:
-                st_101 += 0.01
-                curr_state.append('st_101')
-            elif A[i] > threshA and B[i] > threshB and C[i] > threshC:
-                st_111 += 0.01
-                curr_state.append('st_111')
-            elif A[i] < threshA and B[i] < threshB and C[i] < threshC:
-                st_000 += 0.01
-                curr_state.append('st_000')
-
-    num_switches = count_switches(curr_state)
-
-    return A,B,C,st_100,st_010,st_001,st_110,st_011,st_101,st_111,st_000, num_switches
+    return A,B,C,st_100,st_010,st_001,st_110,st_011,st_101,st_111
 
 
 
@@ -160,7 +149,7 @@ n_points = time.size
 
 noises = np.arange(0.0, 0.00051, 0.0001).round(4)
 
-folder = "C:/project/Summer_2022_DrMKJolly/TT/"
+folder = "C:/project/Summer_2022_DrMKJolly/TTetra/"
 
 p = {}
 
@@ -198,10 +187,9 @@ p['nAtoC'] = [4.000000, 1.000000, 6.000000, 3.000000, 3.000000, 5.000000]
 p['nCtoB'] = [5.000000, 4.000000, 3.000000, 2.000000, 6.000000, 2.000000]
 p['nBtoA'] = [4.000000, 3.000000, 4.000000, 3.000000, 6.000000, 6.000000]
 
-n = 25
+n = 100
 
-for i in range(0, 6, 1):
-    switching_events = {}
+for i in range(4, 6, 1):
 
     if os.path.exists(folder + 'value_storage/initial_conditions/size_' + str(n) + '_random' + str(i) + '.npy'):
         arr = np.load(folder + 'value_storage/initial_conditions/size_' + str(n) + '_random' + str(i) + '.npy')
@@ -230,16 +218,14 @@ for i in range(0, 6, 1):
             '110' : [],
             '011' : [],
             '101' : [],
-            '111' : [],
-            '000' : []
+            '111' : []
             }
 
-        total_switches = 0
+        
         f, ax = plt.subplots(1,4,figsize = (20, 6), sharex = True, sharey = False)
         
         for l in range(n):
-            A,B,C,st_100,st_010,st_001,st_110,st_011,st_101,st_111,st_000,num_sw = integration_const(p, time, time2, l, i, noise)
-            total_switches += num_sw
+            A,B,C,st_100,st_010,st_001,st_110,st_011,st_101,st_111 = integration_const(p, time, time2, l, i, noise)
             
             states['100'].append(st_100)
             states['010'].append(st_010)
@@ -247,8 +233,7 @@ for i in range(0, 6, 1):
             states['110'].append(st_110)
             states['011'].append(st_011)
             states['101'].append(st_101)
-            states['111'].append(st_111)            
-            states['000'].append(st_000)
+            states['111'].append(st_111)
             
             ax[0].plot(time[500:], A[500:], linewidth = 1.5, label = str(p['Aic'][l]))
             ax[0].set_ylabel("A",fontsize=14)
@@ -264,7 +249,6 @@ for i in range(0, 6, 1):
             
             tt_dynamics.append(np.array([A,B,C]))
         
-        switching_events[noise] = total_switches
         
         f_mrt.write('\nFor noise: {} and parameter: {}'.format(noise, i))
         f_mrt.write('\n{:<8} {:<15}'.format('State', 'MRT'))
@@ -275,7 +259,6 @@ for i in range(0, 6, 1):
         f_mrt.write('\n{:<8} {:<15} {:<10}'.format('011', stat.stdev(states['011']), stat.mean(states['011'])))
         f_mrt.write('\n{:<8} {:<15} {:<10}'.format('101', stat.stdev(states['101']), stat.mean(states['101'])))
         f_mrt.write('\n{:<8} {:<15} {:<10}'.format('111', stat.stdev(states['111']), stat.mean(states['111'])))
-        f_mrt.write('\n{:<8} {:<15} {:<10}'.format('000', stat.stdev(states['000']), stat.mean(states['000'])))
         
         plt.tick_params(axis='y',labelsize=12,rotation=90)
         plt.tick_params(axis='x',labelsize=12)
@@ -289,31 +272,13 @@ for i in range(0, 6, 1):
         ax[3].legend(handles = [red_patch, blue_patch, green_patch])
         
         f.tight_layout()
-        #plt.show()
+        plt.show()
         #plt.savefig('plot_'+'lDtoC_lCtoD_' + str(lamdas[0]) + '_' +str(lamdas[1])+'_random_'+str(dt2)+'.jpeg',dpi=1000)
         plt.close()        
         #arr_dynamics.append(tt_dynamics)
-
-        
             
         file = 'value_storage/toggleTriad_noise_' + str(noise) + '_time_' + str(T) + '_param_' + str(i) + '.npy'
-        #np.save(folder + file, np.array(tt_dynamics))
-
+        np.save(folder + file, np.array(tt_dynamics))
         
     f_mrt.close()
     print('file '+str(i)+'saved')
-
-
-    f = plt.figure()
-    f.set_figwidth(7)
-    f.set_figheight(5)
-    
-    plt.bar(range(len(switching_events)), list(switching_events.values()), align='center')
-    plt.xticks(range(len(switching_events)), list(switching_events.keys()))
-
-    plt.ylabel('# Switching events')
-    plt.xlabel('Noise')
-    plt.title("Num switching evenets; Param: " + str(i))
-
-    plt.savefig("TT_Num_switching_param_" + str(i) +'.png')
-    plt.close()

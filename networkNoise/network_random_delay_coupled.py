@@ -68,7 +68,7 @@ def integration_const(p,time,time2,index,p_index,noise, lamda):
 T = 10000
 dt = 0.01
 time = np.arange(0.0,T+dt,dt).round(2)
-dt2 = 0.5
+dt2 = 0.05
 time2 = np.arange(1000.0,T+dt,dt2).round(2)
 noises = [0.001]#[0.0001,0.001,0.002,0.005] #variance of normal dist
 n_points = time.size
@@ -100,7 +100,7 @@ p['kD'] = [0.699470, 0.390561, 0.829410, 0.207175, 0.881824]
 p['kE'] = [0.442699, 0.444709, 0.801409, 0.498639, 0.431325]
 
 #Fold Change
-l_values = [0.1, 0.9, 2.0]#[0.1,0.1],[0.9,0.9],[0.1,0.9],[0.9,0.1]]
+l_values = [0.1, 0.9, 0.5]#[0.1,0.1],[0.9,0.9],[0.1,0.9],[0.9,0.1]]
 p['lAtoB'] = [0.025056, 0.057252, 0.012882, 0.019468, 0.021675]
 p['lBtoC'] = [0.012458, 0.010081, 0.012339, 0.015197, 0.011492]
 p['lCtoA'] = [0.010947, 0.012998, 0.050211, 0.029954, 0.013929]
@@ -117,14 +117,14 @@ p['nEtoD'] = [5.000000, 3.000000, 3.000000, 5.000000, 6.000000]
 p['nDtoC'] = 5.000000
 p['nCtoD'] = 5.000000
 
-p['tau'] = 100.0
+p['tau'] = 0.0
 
 n = 50
 
 lamdas = list(permutations(l_values, r = 2))
 lamdas.append((0.1, 0.1))
 lamdas.append((0.9, 0.9))
-lamdas.append((2.0, 2.0))
+lamdas.append((0.5, 0.5))
 
 for i in range(0, 1, 1):
 
@@ -153,7 +153,7 @@ for i in range(0, 1, 1):
         
         #lamdas_random = [random.choice(lamdas)]
         
-        for lamda in [(0.1, 2.0)]:
+        for lamda in [(0.1,0.9)]:
             
             arr_lamda = []
             
